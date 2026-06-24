@@ -138,7 +138,7 @@ enum FirePattern {
 
 ## 道具场景
 
-1. 在 `scenes` 下新建场景，根节点选择 **Area2D**。
+1. 在 `scene` 下新建场景，根节点选择 **Area2D**。
 2. 命名为 `pick_up`。
 3. 添加子节点：
    - **CollisionShape2D**：Shape 选择 **CircleShape2D**，Radius 6
@@ -147,7 +147,7 @@ enum FirePattern {
 
 ### 闪烁效果 Shader
 
-1. 在 `scenes` 下创建 Shader 资源 `blink.gdshader`，模式选择 **Canvas Item**。
+1. 在 `scene` 下创建 Shader 资源 `blink.gdshader`，模式选择 **Canvas Item**。
 
 ```glsl
 shader_type canvas_item;
@@ -245,10 +245,11 @@ const DEFAULT_MOVE_SPEED_MULTIPLIER := 1.0
 const DEFAULT_FIRE_RATE_MULTIPLIER := 1.0
 
 var current_move_speed_multiplier := DEFAULT_MOVE_SPEED_MULTIPLIER
-var current_fire_rate_multiplier := DEFAULT_FIRE_RATE_MULTIPLIER
+var rapid_fire_rate_multiplier: float = DEFAULT_FIRE_RATE_MULTIPLIER
+var form_fire_rate_multiplier: float = DEFAULT_FIRE_RATE_MULTIPLIER
 
 var move_speed_buff_time := 0.0
-var fire_rate_buff_time := 0.0
+var rapid_fire_buff_time := 0.0
 var form_buff_time := 0.0
 ```
 
@@ -260,61 +261,46 @@ func apply_pickup(config: PickUpConfig) -> bool:
         return false
 
     var applied := false
-    var should_refresh_shooting_timer := false
     var buff_duration := maxf(config.duration, 0.0)
 
     var has_form_buff := config.form == PickUpConfig.PlayerForm.ARMED or config.fire_pattern == PickUpConfig.FirePattern.SPIRAL
-    var has_fire_rate_buff := not is_equal_approx(config.fire_rate_multiplier, DEFAULT_FIRE_RATE_MULTIPLIER)
+    var has_rapid_fire_buff := not is_equal_approx(config.fire_rate_multiplier, DEFAULT_FIRE_RATE_MULTIPLIER)
 
     if not is_equal_approx(config.move_speed_multiplier, DEFAULT_MOVE_SPEED_MULTIPLIER):
         current_move_speed_multiplier = config.move_speed_multiplier
         move_speed_buff_time = buff_duration
         applied = true
 
-    if has_fire_rate_buff and not has_form_buff:
-        current_fire_rate_multiplier = config.fire_rate_multiplier
-        fire_rate_buff_time = buff_duration
-        should_refresh_shooting_timer = true
+    if has_rapid_fire_buff and not has_form_buff:
+        rapid_fire_rate_multiplier = config.fire_rate_multiplier
+        rapid_fire_buff_time = buff_duration
         applied = true
 
     if has_form_buff:
-        is_armed_mode = config.form == PickUpConfig.PlayerForm.ARMED
-        is_spiral_mode = config.fire_pattern == PickUpConfig.FirePattern.SPIRAL
-        current_fire_rate_multiplier = config.fire_rate_multiplier
+        if config.form == PickUpConfig.PlayerForm.ARMED:
+            current_form_mode = PLAYER_FORM_MODE_ARMED
+        if config.fire_pattern == PickUpConfig.FirePattern.SPIRAL:
+            current_shot_pattern = SHOT_PATTERN_SPIRAL
+        form_fire_rate_multiplier = config.fire_rate_multiplier
         form_buff_time = buff_duration
-        spiral_angle = 0.0
-        should_refresh_shooting_timer = true
+        spiral_phase = 0.0
         applied = true
-
-    if should_refresh_shooting_timer:
-        refresh_shooting_timer()
 
     return applied
 ```
 
 - 使用 `is_equal_approx()` 比较浮点数，避免精度问题。
 - 普通射速 Buff 和形态强化 Buff 分开管理，避免相互覆盖。
-- 形态强化时重置螺旋角度，让效果更可控。
+- 形态强化时重置螺旋相位，让效果更可控。
 
-### 刷新射击计时器
-
-```gdscript
-func refresh_shooting_timer() -> void:
-    if shoot_timer.is_stopped():
-        return
-    shoot_timer.wait_time = get_current_fire_interval()
-    shoot_timer.start(shoot_timer.wait_time)
-```
-
-### 获取有效移速和射速
+### 获取有效移速
 
 ```gdscript
 func get_effective_move_speed() -> float:
     return move_speed * current_move_speed_multiplier
-
-func get_current_fire_interval() -> float:
-    return fire_interval / current_fire_rate_multiplier
 ```
+
+> 射击间隔由 04 中已有的 `_get_effective_fire_interval()` 处理，不需要重复定义。
 
 ### 更新 Buff 效果
 
@@ -333,17 +319,17 @@ func update_pickup_effects(delta: float) -> void:
         if move_speed_buff_time <= 0.0:
             current_move_speed_multiplier = DEFAULT_MOVE_SPEED_MULTIPLIER
 
-    if fire_rate_buff_time > 0.0:
-        fire_rate_buff_time -= delta
-        if fire_rate_buff_time <= 0.0:
-            current_fire_rate_multiplier = DEFAULT_FIRE_RATE_MULTIPLIER
+    if rapid_fire_buff_time > 0.0:
+        rapid_fire_buff_time -= delta
+        if rapid_fire_buff_time <= 0.0:
+            rapid_fire_rate_multiplier = DEFAULT_FIRE_RATE_MULTIPLIER
 
     if form_buff_time > 0.0:
         form_buff_time -= delta
         if form_buff_time <= 0.0:
-            is_armed_mode = false
-            is_spiral_mode = false
-            current_fire_rate_multiplier = DEFAULT_FIRE_RATE_MULTIPLIER
+            current_form_mode = PLAYER_FORM_MODE_NORMAL
+            current_shot_pattern = SHOT_PATTERN_NORMAL
+            form_fire_rate_multiplier = DEFAULT_FIRE_RATE_MULTIPLIER
 ```
 
 ### 移动速度应用 Buff
