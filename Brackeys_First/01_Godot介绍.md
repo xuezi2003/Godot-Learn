@@ -32,6 +32,14 @@
   - 其他许可需按要求署名或遵守限制。
 - 建议初学者先用现成资源占位，熟悉后再尝试自制。
 
+[教程所需资源-夸克网盘](https://pan.quark.cn/s/72e0be338b9f)
+
+资源站点：
+
+- [itch.io](https://itch.io/game-assets)
+- [opengameart.org](https://opengameart.org/)
+- [kenney.nl](https://kenney.nl/assets)
+
 ### 导入步骤
 
 1. 在文件系统窗口中右键，创建以下文件夹：
@@ -61,4 +69,3 @@
 - 所有节点和场景在游戏中呈现为树状结构。
 - 树的最顶层节点称为**根节点**。
 - 通过场景树可以清晰管理游戏对象的层级关系。
-

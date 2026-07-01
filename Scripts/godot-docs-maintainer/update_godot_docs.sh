@@ -27,10 +27,9 @@ echo
 # 如果存在 git 仓库，先更新到最新版本
 if [[ -d ".git" ]]; then
     echo "检测到 git 仓库，开始更新..."
-    echo "重置本地改动..."
-    git reset --hard HEAD
-    echo "拉取最新版本（浅克隆）..."
-    git pull --depth 1
+    echo "切换到 master 分支并强行与远端同步..."
+    git fetch --depth=1 origin master
+    git reset --hard origin/master
     echo "更新完成"
     echo
 else

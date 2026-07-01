@@ -8,4 +8,5 @@
 
 ## 实际项目位置
 
-[冥日芳粥-项目文件夹](/mnt/d/Doc_Godot/voidmatrix-tutoria/)
+- [冥日芳粥-项目文件夹](/mnt/d/Doc_Godot/voidmatrix-tutorial/)
+- [Brackeys First 项目文件夹](/mnt/d/Doc_Godot/brackeys-first/)
