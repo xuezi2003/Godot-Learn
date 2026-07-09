@@ -10,3 +10,14 @@
 
 - [冥日芳粥-项目文件夹](/mnt/d/Doc_Godot/voidmatrix-tutorial/)
 - [Brackeys First 项目文件夹](/mnt/d/Doc_Godot/brackeys-first/)
+
+## Git 提交信息
+
+查看完整 commit message（含 body），避免只用 `git log --oneline`：
+
+```bash
+git log -n 5 --format="%H%n%s%n%b"
+git show --no-patch HEAD
+```
+
+新提交需与历史提交的 subject 和 body 风格保持一致。
