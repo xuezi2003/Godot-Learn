@@ -1,3 +1,4 @@
 **/*.obsidian
 .vscode
 godot-docs
+Scripts/godot-docs-maintainer/last_update.json
